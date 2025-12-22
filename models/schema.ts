@@ -6,11 +6,13 @@ class User extends Model{
     email:string;
     password:string;
     rank: 'admin'|'user'
+    createdAt:Date
+    updatedAt:Date
 }
 
 User.init({
     id:{
-        type:DataTypes.STRING,
+        type:DataTypes.INTEGER,
         allowNull:false,
         autoIncrement:true,
         primaryKey:true
@@ -22,16 +24,30 @@ User.init({
     email:{
         type:DataTypes.STRING,
         allowNull:false,
-        unique:true
+        unique:true,
+        validate:{
+            isEmail:true
+        }
     },
     password:{
         type:DataTypes.STRING,
-        allowNull:false
+        allowNull:false,
+        validate:{
+            len:[5,100]
+        }
     },
     rank:{
         type:DataTypes.ENUM("admin","user"),
         allowNull:false,
         defaultValue: "user"
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false
     }
 
 },{

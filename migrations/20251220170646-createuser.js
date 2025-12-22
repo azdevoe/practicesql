@@ -1,6 +1,5 @@
 'use strict';
 
-const { default: sequelize } = require('../config/sequelize');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
