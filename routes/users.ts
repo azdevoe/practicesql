@@ -1,10 +1,12 @@
 import express ,{ Router,Request,Response } from "express";
 import { Error,UniqueConstraintError,ValidationError } from "sequelize";
 import jwt from 'jsonwebtoken'
+import { changeRank, ranki, softDelete } from "../controller/user";
 
 const router:Router = express.Router()
-import z, { email } from 'zod'
+import z from 'zod'
 import { createUser, login, users } from "../controller/user";
+import { auth } from "../middlewares/auth";
 
 const userDetails = z.object({
     name:z.string().min(3,`username must be up to 3 characters`),
@@ -66,15 +68,24 @@ router.post('/createUser',async function(req:Request,res:Response){
     }
 })
 
+
 router.get('/users',async function(req:Request,res:Response){
     try {
-        let Users = await users();
+        let {name,rank,id,sign} = req.query;
+      console.log(name,rank,id,sign);
+
+      let yy = ['admin','user']
+      let signArr = ['gt','lt']
+      let uu = yy.includes(String(rank));
+      let checker = signArr.includes(String(sign))
+      type signTy = 'gt'|'lt';
+        let Users = await users(name as string,uu?rank as ranki:undefined,id? Number(id):undefined,checker?sign as signTy :undefined);
         if(Users.error){
             return res.status(400).json(`error occurred getting all users`)
         }
         return res.status(200).json(Users.message)
     } catch (error) {
-        res.status(500).json(`error finding the users`)
+        res.status(500).json(`error finding the users at router`)
     }
 })
 
@@ -122,4 +133,41 @@ router.post('/login',async function(req:Request,res:Response){
     }
 })
 
+router.patch('/users/:email',auth,async function (req:Request,res:Response) {
+    try {
+        const {email} = req.params;
+        const user = await changeRank(email);
+        if(user.error){
+            return res.status(400).json(user.message)
+        }
+        return res.status(200).json(user.message)
+    } catch (error) {
+        if(error instanceof ValidationError){
+            return res.status(500).json(error.errors[0].message)
+        }
+        if(error instanceof UniqueConstraintError){
+            return res.status(500).json(error.errors[0].message)
+        }
+        return res.status(500).json(`error occurred at the server`)
+    }
+})
+
+router.patch('/usersd/:email',async function(req:Request,res:Response){
+    try {
+        const {email} = req.params;
+        const user = await softDelete(email)
+        if(user.error){
+            return res.status(400).json(user.message);
+        }
+        return res.status(200).json(user.message)
+    } catch (error) {
+     if(error instanceof ValidationError){
+            return res.status(500).json(error.errors[0].message)
+        }
+        if(error instanceof UniqueConstraintError){
+            return res.status(500).json(error.errors[0].message)
+        }
+        return res.status(500).json(`error occurred at the server`)    
+    }
+})
 export default router

@@ -8,6 +8,7 @@ class User extends Model{
     rank: 'admin'|'user'
     createdAt:Date
     updatedAt:Date
+    isDeleted:boolean
 }
 
 User.init({
@@ -48,6 +49,11 @@ User.init({
     updatedAt: {
         type: DataTypes.DATE,
         allowNull: false
+    },
+    isDeleted:{
+        type:DataTypes.BOOLEAN,
+        allowNull:false,
+        defaultValue:false
     }
 
 },{
