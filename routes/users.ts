@@ -35,8 +35,7 @@ router.post('/createUser',async function(req:Request,res:Response){
         if(user.error){
             return res.status(400).json(user.message)
         }
-        let token = jwt.sign({id:user.message.id,rank:user.message.rank},'secret',{expiresIn:'1w'})
-        return res.status(201).json({user:user.message,token})
+        return res.status(201).json(user.message)
     } catch (error) {
             if(error instanceof UniqueConstraintError){
             console.log(error.message);
@@ -83,6 +82,7 @@ router.get('/users',async function(req:Request,res:Response){
         if(Users.error){
             return res.status(400).json(`error occurred getting all users`)
         }
+        
         return res.status(200).json(Users.message)
     } catch (error) {
         res.status(500).json(`error finding the users at router`)
@@ -100,7 +100,9 @@ router.post('/login',async function(req:Request,res:Response){
             if(auth.error){
                 return res.status(400).json(auth.message)
             }
-            return res.status(200).json(auth.action)
+            let token = jwt.sign({id:auth.message},'secret',{expiresIn:'1w'})
+
+            return res.status(200).json({message:`login successful`,token})
     } catch (error) {
         
      if(error instanceof UniqueConstraintError){
@@ -133,7 +135,7 @@ router.post('/login',async function(req:Request,res:Response){
     }
 })
 
-router.patch('/users/:email',auth,async function (req:Request,res:Response) {
+router.patch('/users/:email',async function (req:Request,res:Response) {
     try {
         const {email} = req.params;
         const user = await changeRank(email);
@@ -152,7 +154,7 @@ router.patch('/users/:email',auth,async function (req:Request,res:Response) {
     }
 })
 
-router.patch('/usersd/:email',async function(req:Request,res:Response){
+router.patch('/usersd/:email',auth,async function(req:Request,res:Response){
     try {
         const {email} = req.params;
         const user = await softDelete(email)
@@ -167,7 +169,7 @@ router.patch('/usersd/:email',async function(req:Request,res:Response){
         if(error instanceof UniqueConstraintError){
             return res.status(500).json(error.errors[0].message)
         }
-        return res.status(500).json(`error occurred at the server`)    
+        return res.status(500).json(`error occurred at the server`)
     }
 })
 export default router

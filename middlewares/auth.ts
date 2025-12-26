@@ -10,10 +10,12 @@ declare global{
 }
 export function auth(req:Request,res:Response,next:NextFunction){
     try {
-        let token =  req.headers.authorization?.split('')[1]
+        let token =  req.headers.authorization?.split(' ')[1]
         if(!token){
             return res.status(403).json(`forbidden`)
         }
+        console.log(token);
+        
         const compare = jwt.verify(token,'secret');
         req.user= compare
         console.log(compare);

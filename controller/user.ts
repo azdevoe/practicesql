@@ -52,10 +52,8 @@ export async function users(name:string,rank:ranki|undefined,id?:number,sign?:'g
  async function findOne(email:string){
     const user =await User.findOne({where:{email}})
   
-    return {
-        error:false,
-        message:user
-    }
+    return user
+    
 }
 
 export async function login(email:string,password:string){
@@ -66,18 +64,21 @@ export async function login(email:string,password:string){
             message:`who is this `
         }
     }
-    let comp= await bcrypt.compare(password,user.message!.password);
+    let comp= await bcrypt.compare(password,user.password);
     if(!comp){
         return {
             error:true,
             message:`invalid password`
         }
     }
+    let y={
+        rank:user.rank,
+        id:user.id
+    }
     return {
         error:false,
-        action:`success`
+        message:y
     }
-
 }
 
 export async function changeRank(email:string){
