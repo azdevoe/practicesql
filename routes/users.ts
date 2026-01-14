@@ -145,10 +145,10 @@ router.patch('/users/:email',async function (req:Request,res:Response) {
         return res.status(200).json(user.message)
     } catch (error) {
         if(error instanceof ValidationError){
-            return res.status(500).json(error.errors[0].message)
+            return res.status(400).json(error.errors[0].message)
         }
         if(error instanceof UniqueConstraintError){
-            return res.status(500).json(error.errors[0].message)
+            return res.status(400).json(error.errors[0].message)
         }
         return res.status(500).json(`error occurred at the server`)
     }
