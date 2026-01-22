@@ -70,15 +70,19 @@ router.post('/createUser',async function(req:Request,res:Response){
 
 router.get('/users',async function(req:Request,res:Response){
     try {
-        let {name,rank,id,sign} = req.query;
-      console.log(name,rank,id,sign);
+        let {name,rank,id,sign,page,limit} = req.query;
+      console.log(name,rank,id,sign,page,limit);
+
+      let pageNumber=Number(page)||1
+      let pageLimit=Number(limit)||10
+      let offset = (pageNumber-1)*pageLimit
 
       let yy = ['admin','user']
       let signArr = ['gt','lt']
       let uu = yy.includes(String(rank));
       let checker = signArr.includes(String(sign))
       type signTy = 'gt'|'lt';
-        let Users = await users(name as string,uu?rank as ranki:undefined,id? Number(id):undefined,checker?sign as signTy :undefined);
+        let Users = await users(offset,pageLimit,name as string,uu?rank as ranki:undefined,id? Number(id):undefined,checker?sign as signTy :undefined);
         if(Users.error){
             return res.status(400).json(`error occurred getting all users`)
         }

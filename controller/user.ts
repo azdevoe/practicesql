@@ -24,7 +24,7 @@ export async function createUser( name:string,email:string,password:string){
 }
 //:{id:{[Op.gt]:2}}}
 export type ranki = 'admin'|'user';
-export async function users(name:string,rank:ranki|undefined,id?:number,sign?:'gt'|'lt'){
+export async function users(offset,pageLimit,name:string,rank:ranki|undefined,id?:number,sign?:'gt'|'lt'){
     let where:WhereOptions ={};
     if(name) where.name = name
     if(rank) where.rank = rank
@@ -41,7 +41,7 @@ export async function users(name:string,rank:ranki|undefined,id?:number,sign?:'g
     console.log(where);
     
     
-    let users = await User.findAll({where});
+    let users = await User.findAndCountAll({where,offset,limit:pageLimit});
     console.log(users);
     return {
         error:false,
