@@ -1,7 +1,6 @@
 import User from "../models/schema";
 import bcrypt from'bcrypt';
 import { WhereOptions,Op } from "sequelize";
-import { email } from "zod";
 
 export async function createUser( name:string,email:string,password:string){
     const hashedp = await bcrypt.hash(password,10)
