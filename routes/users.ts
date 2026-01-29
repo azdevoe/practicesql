@@ -1,4 +1,4 @@
-import express ,{ Router,Request,Response } from "express";
+import express ,{ Router,Request,Response, NextFunction } from "express";
 import { Error,UniqueConstraintError,ValidationError } from "sequelize";
 import jwt from 'jsonwebtoken'
 import { changeRank, ranki, softDelete } from "../controller/user";
@@ -7,6 +7,8 @@ const router:Router = express.Router()
 import z from 'zod'
 import { createUser, login, users } from "../controller/user";
 import { auth } from "../middlewares/auth";
+import { redisMiddleware } from "../middlewares/auth";
+import redisCli  from "../middlewares/redisconnection";
 
 const userDetails = z.object({
     name:z.string().min(3,`username must be up to 3 characters`),
@@ -66,9 +68,14 @@ router.post('/createUser',async function(req:Request,res:Response){
         })
     }
 })
+function cachename(req:Request,res:Response,next:NextFunction){
+    req.redisParam = `user${req.originalUrl}`
+    console.log(req.originalUrl);
+    
+    next()
+}
 
-
-router.get('/users',async function(req:Request,res:Response){
+router.get('/users',cachename,redisMiddleware,async function(req:Request,res:Response){
     try {
         let {name,rank,id,sign,page,limit} = req.query;
       console.log(name,rank,id,sign,page,limit);
@@ -87,6 +94,9 @@ router.get('/users',async function(req:Request,res:Response){
             return res.status(400).json(`error occurred getting all users`)
         }
         
+        if (req.redisParam) {
+            await redisCli.setEx(req.redisParam, 60, JSON.stringify(Users.message)); // 60s = 1min, adjust as needed
+        }        
         return res.status(200).json(Users.message)
     } catch (error) {
         res.status(500).json(`error finding the users at router`)
