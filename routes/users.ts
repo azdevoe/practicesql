@@ -20,9 +20,9 @@ const loginDetails = z.object({
     email:z.string().email(),
     password:z.string()
 })
-router.post('/createUser',async function(req:Request,res:Response){
-    try {
-        console.log(req.body);
+router.post('/createUser',async function(req:Request,res:Response,next:NextFunction){
+        try {
+            console.log(req.body);
         
         let zodified = userDetails.parse(req.body)
         if(!zodified){
@@ -38,37 +38,15 @@ router.post('/createUser',async function(req:Request,res:Response){
             return res.status(400).json(user.message)
         }
         return res.status(201).json(user.message)
-    } catch (error) {
-            if(error instanceof UniqueConstraintError){
-            console.log(error.message);
-            
-            return res.status(400).json({
-                message: 'email already in use in db'
-            })
+        } catch (error) {
+            //i created a middleware that handles error in the middleware route
+            //this next function leads to it
+            next(error)
         }
-        if(error instanceof ValidationError){
-            return res.status(400).json({
-                message: error.errors[0].message
-            })
-        }
-        if(error instanceof Error){
-            console.log(`error occurred at server while creating user`);
-            console.log(error.message);
-            return res.status(500).json({
-                message:error.message
-            })
-        }
-        console.log(`error occurred at server while creating user`);
-        console.log(error);
-        
-
-
-        return res.status(500).json({
-            message:`error occurred at server while creating user`
-        })
-    }
+    
 })
 function cachename(req:Request,res:Response,next:NextFunction){
+    //this cachename function creates something unique so we use as key for the cache
     req.redisParam = `user${req.originalUrl}`
     console.log(req.originalUrl);
     
@@ -103,7 +81,7 @@ router.get('/users',cachename,redisMiddleware,async function(req:Request,res:Res
     }
 })
 
-router.post('/login',async function(req:Request,res:Response){
+router.post('/login',async function(req:Request,res:Response,next:NextFunction){
     try {
             let zodified = loginDetails.parse(req.body);
             if(!zodified){
@@ -118,38 +96,11 @@ router.post('/login',async function(req:Request,res:Response){
 
             return res.status(200).json({message:`login successful`,token})
     } catch (error) {
-        
-     if(error instanceof UniqueConstraintError){
-            console.log(error.message);
-            
-            return res.status(400).json({
-                message: 'email already in use in db'
-            })
-        }
-        if(error instanceof ValidationError){
-            return res.status(400).json({
-                message: error.errors[0].message
-            })
-        }
-        if(error instanceof Error){
-            console.log(`error occurred at server while creating user`);
-            console.log(error.message);
-            return res.status(500).json({
-                message:error.message
-            })
-        }
-        console.log(`error occurred at server while creating user`);
-        console.log(error);
-        
-
-
-        return res.status(500).json({
-            message:`error occurred at server while creating user`
-        })
+        next(error)
     }
 })
 
-router.patch('/users/:email',async function (req:Request,res:Response) {
+router.patch('/users/:email',async function (req:Request,res:Response,next:NextFunction) {
     try {
         const {email} = req.params;
         const user = await changeRank(email);
@@ -158,17 +109,11 @@ router.patch('/users/:email',async function (req:Request,res:Response) {
         }
         return res.status(200).json(user.message)
     } catch (error) {
-        if(error instanceof ValidationError){
-            return res.status(400).json(error.errors[0].message)
-        }
-        if(error instanceof UniqueConstraintError){
-            return res.status(400).json(error.errors[0].message)
-        }
-        return res.status(500).json(`error occurred at the server`)
+        next(error)
     }
 })
 
-router.patch('/usersd/:email',auth,async function(req:Request,res:Response){
+router.patch('/usersd/:email',auth,async function(req:Request,res:Response,next:NextFunction){
     try {
         const {email} = req.params;
         const user = await softDelete(email)
@@ -177,13 +122,7 @@ router.patch('/usersd/:email',auth,async function(req:Request,res:Response){
         }
         return res.status(200).json(user.message)
     } catch (error) {
-     if(error instanceof ValidationError){
-            return res.status(500).json(error.errors[0].message)
-        }
-        if(error instanceof UniqueConstraintError){
-            return res.status(500).json(error.errors[0].message)
-        }
-        return res.status(500).json(`error occurred at the server`)
+        next(error)
     }
 })
 export default router

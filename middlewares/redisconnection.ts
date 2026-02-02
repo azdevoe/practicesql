@@ -2,7 +2,7 @@ import { createClient } from "redis";
 let redisCli=createClient()
 
 redisCli.on('error',err=>{
-    console.error("redis client errro "+ err)
+    console.error("redis client error "+ err)
 })
 redisCli.on('connect',()=>{
     console.log('redis connected');

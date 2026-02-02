@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import userrouter from './routes/users';
 import rateLimit from 'express-rate-limit';
 import redisCli  from './middlewares/redisconnection';
+import { validationMiddleware } from './middlewares/auth';
 dotenv.config();
 const app:Express = express()
 app.use(express.json())
@@ -18,6 +19,7 @@ const limiter = rateLimit({
 app.use(limiter)
 app.use('/auth',userrouter)
 
+app.use(validationMiddleware)
 
 
      app.listen( port,async()=>{

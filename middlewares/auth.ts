@@ -1,6 +1,8 @@
 import { NextFunction,Request,Response } from "express";
 import jwt from 'jsonwebtoken';
 import redisCli  from "./redisconnection";
+import { UniqueConstraintError,ValidationError,Error } from "sequelize";
+import z from "zod";
 
 declare global{
     namespace Express{
@@ -44,4 +46,42 @@ export async function redisMiddleware(req:Request,res:Response,next:NextFunction
             
             next()
         }
+}
+
+export function validationMiddleware(error:any,req:Request,res:Response,next:NextFunction){
+     if(error instanceof UniqueConstraintError){
+                console.log(error.message);
+                
+                return res.status(400).json({
+                    message: 'email already in use in db'
+                })
+            }
+            if(error instanceof ValidationError){
+                return res.status(400).json({
+                    message: error.errors[0].message
+                })
+            }
+            if(error instanceof Error){
+                console.log(`error occurred at server while creating user`);
+                console.log(error.message);
+                return res.status(500).json({
+                    message:error.message
+                })
+            }
+            if(error instanceof z.ZodError){
+                console.log(`there is a zod validation errro`);
+                return res.status(400).json({
+                    message:`validation failed`,
+                    details:error.flatten().fieldErrors
+                })
+                
+            }
+            console.log(`error occurred at server while creating user`);
+            console.log(error);
+            
+    
+    
+            return res.status(500).json({
+                message:`error occurred at server while creating user`
+            })
 }
